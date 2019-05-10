@@ -49,11 +49,8 @@ public class Checkzer {
 		String line;
 		String file = null;
 		int cpt=0;
-		while ((line = br.readLine()) != null) {
-			if(cpt==0) {
-				file=line;
-			}
-			cpt++;
+		if ((line = br.readLine()) != null) {
+			file=line;
 		}*/
 		//Donnees donnee = new Donnees(file+"_I.full");
 		Donnees donnee = new Donnees("dense_10_30_3_1_I.full") ;
