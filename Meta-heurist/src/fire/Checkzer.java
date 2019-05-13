@@ -42,18 +42,16 @@ public class Checkzer {
 	}
 	
 	public static int check_solution(int node_id,String test,String fichiertest) throws IOException {
-		//Donnees donnee = new Donnees(fichiertest);
-		/*BufferedReader br = new BufferedReader(new FileReader("/home/rahmoun/4IR/Meta-heuristique/meta-heuristique/Test_solutions"+fichiertest));
+		BufferedReader br = new BufferedReader(new FileReader("./../../meta-heuristique/Test_solutions/"+fichiertest));
 		
 		
 		String line;
 		String file = null;
-		int cpt=0;
+		//int cpt=0;
 		if ((line = br.readLine()) != null) {
 			file=line;
-		}*/
-		//Donnees donnee = new Donnees(file+"_I.full");
-		Donnees donnee = new Donnees("dense_10_30_3_1_I.full") ;
+		}
+		Donnees donnee = new Donnees(file);
 		int i=-1;
 		int[][] tab_chemins = donnee.getTab_chemins();
 		String[] mots = test.split(" ") ;

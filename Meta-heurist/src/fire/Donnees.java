@@ -20,7 +20,7 @@ private int[][] tab_arcs = new int [1000][5];
 
 
 	public Donnees(String file1) throws IOException {
-		file="/home/rahmoun/4IR/Meta-heuristique/meta-heuristique/Instances/"+file1;
+		file="./../../meta-heuristique/InstancesInt/"+file1;
 		crea_tableaux();
 		
 	}
