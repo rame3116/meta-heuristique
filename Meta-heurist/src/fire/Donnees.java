@@ -53,12 +53,12 @@ public class Donnees {
 			    	String[] mots = line.split(" ") ;
 			    	int nb_noeuds = Integer.parseInt(mots[3]) ;
 			    	//System.out.println("noeud : "+mots[0]+ " population : "+mots[1]+"; taux max "+mots[2]+"; nombre de noeuds à parcourir : "+mots[3]+"; noeud S : "+mots[nb_noeuds+3]); 
-			    	tab_chemins[compteur_ligne-3][0]=Integer.parseInt(mots[0]) ;
-			    	tab_chemins[compteur_ligne-3][1]=Integer.parseInt(mots[1]) ;
-			    	tab_chemins[compteur_ligne-3][2]=Integer.parseInt(mots[2]) ;
-			    	tab_chemins[compteur_ligne-3][3]=Integer.parseInt(mots[3]) ;
+			    	tab_chemins[compteur_ligne-3][0]=Integer.parseInt(mots[0]) ; //id du noeud
+			    	tab_chemins[compteur_ligne-3][1]=Integer.parseInt(mots[1]) ; //population
+			    	tab_chemins[compteur_ligne-3][2]=Integer.parseInt(mots[2]) ; //taux max
+			    	tab_chemins[compteur_ligne-3][3]=Integer.parseInt(mots[3]) ; //k
 			    	for (int i=0; i<nb_noeuds; i++) {
-			    		tab_chemins[compteur_ligne-3][i+4]=Integer.parseInt(mots[i+4]) ;
+			    		tab_chemins[compteur_ligne-3][i+4]=Integer.parseInt(mots[i+4]) ; //chemin mais sans le noeud init
 				    		    		
 			    	}
 
@@ -84,18 +84,16 @@ public class Donnees {
 			 //Chemins jusqu'aux noeuds finaux
 			   if(compteur_ligne>14 ) {
 			    	String[] mots = line.split(" ") ;
-			    	int nb_noeuds = Integer.parseInt(mots[3]) ;
-			    	//System.out.println("noeud n°1 : "+mots[0]+ " noeud n°2 : "+mots[1]+"; duedate "+mots[2]+"; length : "+mots[3]+"; capacity : "+mots[4]); 
-			    	tab_arcs[compteur_ligne-15][0]=Integer.parseInt(mots[0]) ;
-			    	tab_arcs[compteur_ligne-15][1]=Integer.parseInt(mots[1]) ;
+			    	tab_arcs[compteur_ligne-15][0]=Integer.parseInt(mots[0]) ;//noeud 1
+			    	tab_arcs[compteur_ligne-15][1]=Integer.parseInt(mots[1]) ;//noeud 2
 			    	if (mots[2].equals("9223372036854775807")) {
 			    		tab_arcs[compteur_ligne-15][2] = Integer.MAX_VALUE; 
 			    	}
 			    	else {
-			    		tab_arcs[compteur_ligne-15][2]=Integer.parseInt(mots[2]) ;
+			    		tab_arcs[compteur_ligne-15][2]=Integer.parseInt(mots[2]) ;//duetime
 			    	}
-			    	tab_arcs[compteur_ligne-15][3]=Integer.parseInt(mots[3]) ;
-			    	tab_arcs[compteur_ligne-15][4]=Integer.parseInt(mots[4]) ;
+			    	tab_arcs[compteur_ligne-15][3]=Integer.parseInt(mots[3]) ;//travel time
+			    	tab_arcs[compteur_ligne-15][4]=Integer.parseInt(mots[4]) ;//capacité
 
 
 			    	//print le chemin
@@ -155,7 +153,7 @@ public class Donnees {
 	public int next_node(int noeud_init,int noeud_courant) {
 		
 		int index_i=get_index_fn(noeud_init) ;	//Recup la ligne du chemin à regarder
-		int index_j = 1 ;
+		int index_j = 0 ;
 		while (tab_chemins[index_i][index_j] != noeud_courant) {		//Chercher le noeud courant ds le chemin
 			index_j ++ ;
 		}
