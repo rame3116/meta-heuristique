@@ -157,7 +157,13 @@ public class Donnees {
 		while (tab_chemins[index_i][index_j] != noeud_courant) {		//Chercher le noeud courant ds le chemin
 			index_j ++ ;
 		}
-		return tab_chemins[index_i][index_j+1];	//On s'interesse au noeud juste après le noeud courant 
+		if(noeud_courant==noeud_init) {
+			return tab_chemins[index_i][index_j+4];	
+		}
+		else {
+			return tab_chemins[index_i][index_j+1];	//On s'interesse au noeud juste après le noeud courant 
+
+		}
 		
 			
 	}
