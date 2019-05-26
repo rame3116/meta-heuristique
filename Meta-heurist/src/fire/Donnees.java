@@ -8,11 +8,11 @@ import java.io.IOException;
 ///home/rahmoun/4IR/Meta-heuristique/meta-heuristique/Instances
 public class Donnees {
 	private String file;
-	private int nbevac; //nombre de sommets à évacuer
+	private int nb_chemins; //nombre de sommets à évacuer
 	private int noeud_safe; //noeud à atteindre
 	
 	private int nb_noeuds_tot; //Nb noeuds
-	private int nb_arcs_tot ; //Nb arcs
+	private int nb_arcs_tot ; //Nb arcs au total
 	
 	private int compteur_ligne=0;
 	private int[][] tab_chemins = new int [10][200];
@@ -39,11 +39,11 @@ public class Donnees {
 			   //1ere ligne info
 			   if(compteur_ligne==2) {
 			    	String[] mots = line.split(" ") ;
-			    	nbevac = Integer.parseInt(mots[0]);
+			    	nb_chemins = Integer.parseInt(mots[0]);
 			    	noeud_safe = Integer.parseInt(mots[1]);
 			
 			    	//Affichage de l'en-tete
-					//System.out.println("Nom de l'instance résolue : "+nbevac) ; 
+					//System.out.println("Nom de l'instance résolue : "+nb_chemins) ; 
 					//System.out.println("Nombre de sommets à évacuer : "+noeud_safe) ; 
 
 			    }
@@ -124,15 +124,59 @@ public class Donnees {
 		return tab_arcs;
 	}
 
+	//Chercher l'index dans le tab_arcs tel que les 2 noeuds correspondent + Retourner capa
 	public int get_capaArc(int node1, int node2, int[][] tab) {
 		
-		//Chercher l'index dans le tab_arcs tel que les 2 noeuds correspondent + Retourner capa
+		
+		System.out.println("[Get_CapaArc] Recherche de l'arc ("+node1+", "+node2+") ");
+
+		//On recherche un arc (node1, node2)
 		int index_i=0 ;
-		while (((tab[index_i][0] != node1) || (tab[index_i][1] != node2)) && index_i<1000) {
+		while (((tab[index_i][0] != node1) || (tab[index_i][1] != node2)) && index_i<999) {
 			index_i ++ ;
 		}
+		
+		if (index_i==999) {			//Si c'est l'index qui sort du While, c'est qu'il n'a pas trouvé d'arc (node1,node2)
+			System.out.println("[Get_CapaArc] L'arc ("+node1+", "+node2+") n'existe pas ");
+			index_i=0 ;				//On cherche l'arc (node2, node1) mnt, car les arcs ne st pas orientés
+			while (((tab[index_i][0] != node2) || (tab[index_i][1] != node1)) && index_i<999) {
+				index_i ++ ;
+			}
+			if (index_i == 999) {	//S'il parcours tt sans rien trouver c'est que l'arc n'existe pas
+				System.out.println("[Get_CapaArc] [ERROR !!] L'arc ("+node1+", "+node2+") n'existe pas qlque soit le sens ");
+			}
+		}
+		
 		return tab[index_i][4] ;
 	}
+	
+	
+	//Chercher l'index dans le tab_arcs tel que les 2 noeuds correspondent + Retourner tps de traversé
+	public int get_timeArc(int node1, int node2, int[][] tab) {
+		
+		
+		System.out.println("[Get_timeArc] Recherche de l'arc ("+node1+", "+node2+") ");
+
+		//On recherche un arc (node1, node2)
+		int index_i=0 ;
+		while (((tab[index_i][0] != node1) || (tab[index_i][1] != node2)) && index_i<999) {
+			index_i ++ ;
+		}
+		
+		if (index_i==999) {			//Si c'est l'index qui sort du While, c'est qu'il n'a pas trouvé d'arc (node1,node2)
+			System.out.println("[Get_timeaArc] L'arc ("+node1+", "+node2+") n'existe pas ");
+			index_i=0 ;				//On cherche l'arc (node2, node1) mnt, car les arcs ne st pas orientés
+			while (((tab[index_i][0] != node2) || (tab[index_i][1] != node1)) && index_i<999) {
+				index_i ++ ;
+			}
+			if (index_i == 999) {	//S'il parcours tt sans rien trouver c'est que l'arc n'existe pas
+				System.out.println("[Get_timeArc] [ERROR !!] L'arc ("+node1+", "+node2+") n'existe pas qlque soit le sens ");
+			}
+		}
+		
+		return tab[index_i][3] ;
+	}
+	
 	
 	public int get_indexArc(int node1, int node2) {
 		
@@ -158,7 +202,7 @@ public class Donnees {
 			index_j ++ ;
 		}
 		if(noeud_courant==noeud_init) {
-			return tab_chemins[index_i][index_j+4];	
+			return tab_chemins[index_i][index_j+4];	//Si ce noeud est le 1er d'un chemin, alors il faut les 3 cases d'infos dans le chemin d'arcs
 		}
 		else {
 			return tab_chemins[index_i][index_j+1];	//On s'interesse au noeud juste après le noeud courant 
@@ -193,6 +237,10 @@ public class Donnees {
 	
 	public int get_finalNode() {
 		return noeud_safe ;
+	}
+	
+	public int get_nb_chemins() {
+		return nb_chemins ;
 	}
 
 }

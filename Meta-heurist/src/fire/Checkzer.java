@@ -136,10 +136,202 @@ public class Checkzer {
 		return noeudsTest.get(index*4+code);
 	}
 	
+/***********			TP n°2 			****************/
+	
+	
+	public  int borne_inf(int node_id,String fichiertest) throws IOException {
+
+		int i=1;	//Si solution non valide, elle devient -1
+		int nb_noeudsTest=0 ;
+
+		
+		//Lire fichier solution
+		BufferedReader br = new BufferedReader(new FileReader("./../../meta-heuristique/Test_solutions/"+fichiertest));
+		
+		String line;
+		String file = null;
+		
+		//Recupere 1ère ligne <==> fichier contenant les données
+		int compteur_ligne=0;
+		if((line = br.readLine())!=null) {
+			compteur_ligne ++;
+			file=line;
+		}
+		
+		//Ouverture et lecture du fichier contenant les données
+		Donnees donnee = new Donnees(file);
+		int[][] tab_chemins = donnee.getTab_chemins();
+		int[][] tab_arcsChecker = donnee.getTab_arcs();
+
+
+
+		while ((line = br.readLine()) != null) {
+			   compteur_ligne ++;
+			   
+			   if(compteur_ligne==2) { 		//Contient le nb de noeuds de départ
+					nb_noeudsTest = Integer.parseInt(line);
+			   }	
+			   
+			   if(2<compteur_ligne && compteur_ligne<(nb_noeudsTest+3)) {
+			    	String[] mots = line.split(" ") ;	 //Exp: 233 1354 0
+			    	//Par défaut tous les noeuds ont un chemin
+			    	noeudsTest.add(Integer.parseInt(mots[0]));	//Noeud initial, figé
+			    	noeudsTest.add(Integer.parseInt(mots[0]));	//Progression, noeud courant
+			    	noeudsTest.add(Integer.parseInt(mots[1]));	//Taux d'evacuation
+			    	noeudsTest.add(Integer.parseInt(mots[2]));	//Heure de début
+					//System.out.println("Remplissage de NoeudsTest: "+mots[0]+", "+mots[0]+", "+mots[1]+"et "+mots[2])  ;
+
+			   }
+		}
+		
+		
+		//System.out.println("Il y a "+nb_noeudsTest+" noeuds d'evac et le tab noeudsTest a une taille de "+noeudsTest.size())  ;
+		int borne_inf = 999999999 ;	//Valeur par déf qu'on cherchera à optimiser
+		
+		//On test chaque noeud et on calcul son tps d'evacuation, indépendament des autres noeuds d'evacuations et noeuds intermediaires
+		for (int n=0; n<nb_noeudsTest; n++) {
+			
+			//System.out.println("Recherches de chemins pour le Noeud n°"+codearraylist(n,0))  ;
+			
+			//Chercher tt les chemins qui commencent par le noeud à évacuer que l'on traite
+			for (int c=0; c<donnee.get_nb_chemins(); c++) {			
+
+				//System.out.println("Comparaison entre le noeud "+codearraylist(n,0)+" d'indice "+noeudsTest.indexOf(codearraylist(n,0))+" avec "+tab_chemins[c][0])  ;
+				if (codearraylist(n,0) == tab_chemins[c][0]) {	//Ce chemin est valide
+					//On calcul la durée de ce chemin (Somme durée des arcs)
+			    	int long_chemin = tab_chemins[c][3] ;		//Recup la taille de ce chemin
+					int temps_cumul= donnee.get_timeArc(tab_chemins[c][0],tab_chemins[c][4],tab_arcsChecker) ;
+				
+					for (int a=0; a<(long_chemin-1); a++) {		
+			    		//System.out.print("noeud "+n+": Debug calcul cumul: Get capa sur "+tab_chemins[c][a+4]+" et "+tab_chemins[c][a+5]); //ça print le chemin 
+						temps_cumul = temps_cumul + donnee.get_timeArc(tab_chemins[c][a+4], tab_chemins[c][a+5],tab_arcsChecker) ;
+						
+					}
+					//On regarde si c'est + petit que la borne_inf actuelle 
+		    		System.out.print("Maj temps_cumul au noeud n°"+n+": temps_cumul="+temps_cumul+" et borne_inf="+borne_inf) ;
+
+					if (temps_cumul<borne_inf) {
+						borne_inf = temps_cumul ;
+					}
+					//Affiche la ligne du chemin OK
+					System.out.println("Noeud n°"+codearraylist(n,0)+" commence par le chemin ligne "+c+" (1er elm: "+tab_chemins[c][0]+") arrive en borne inf en: "+temps_cumul+" sec.") ;
+				}
+			}
+			
+			
+		}
+		System.out.println("[Borne_inf] La borne inférieur est: "+borne_inf);
+		
+		
+		/*
+		//Vérif si les chemins ont les bons temps:
+		for (int n=0; n<10; n++) {		//Tt les chemins	
+			int somme = 0 ;
+			
+			//On calcul le tps de ce chemin
+			for (int a=0; a<tab_chemins[n][3]; a++) {		
+	    		//System.out.print("noeud "+n+": Debug calcul cumul: Get capa sur "+tab_chemins[c][a+4]+" et "+tab_chemins[c][a+5]); //ça print le chemin 
+				somme = somme + donnee.get_capaArc(tab_chemins[a][a+4], tab_chemins[c][a+5],tab_arcsChecker) ;
+				
+			}
+		}*/
+		
+		
+		return borne_inf ;
+	}
+	
+	public  int borne_sup(int node_id,String fichiertest) throws IOException {
+
+		int i=1;	//Si solution non valide, elle devient -1
+		int nb_noeudsTest=0 ;
+
+		
+		//Lire fichier solution
+		BufferedReader br = new BufferedReader(new FileReader("./../../meta-heuristique/Test_solutions/"+fichiertest));
+		
+		String line;
+		String file = null;
+		
+		//Recupere 1ère ligne <==> fichier contenant les données
+		int compteur_ligne=0;
+		if((line = br.readLine())!=null) {
+			compteur_ligne ++;
+			file=line;
+		}
+		
+		//Ouverture et lecture du fichier contenant les données
+		Donnees donnee = new Donnees(file);
+		int[][] tab_chemins = donnee.getTab_chemins();
+		int[][] tab_arcsChecker = donnee.getTab_arcs();
+
+
+
+		while ((line = br.readLine()) != null) {
+			   compteur_ligne ++;
+			   
+			   if(compteur_ligne==2) { 		//Contient le nb de noeuds de départ
+					nb_noeudsTest = Integer.parseInt(line);
+			   }	
+			   
+			   if(2<compteur_ligne && compteur_ligne<(nb_noeudsTest+3)) {
+			    	String[] mots = line.split(" ") ;	 //Exp: 233 1354 0
+			    	//Par défaut tous les noeuds ont un chemin
+			    	noeudsTest.add(Integer.parseInt(mots[0]));	//Noeud initial, figé
+			    	noeudsTest.add(Integer.parseInt(mots[0]));	//Progression, noeud courant
+			    	noeudsTest.add(Integer.parseInt(mots[1]));	//Taux d'evacuation
+			    	noeudsTest.add(Integer.parseInt(mots[2]));	//Heure de début
+					//System.out.println("Remplissage de NoeudsTest: "+mots[0]+", "+mots[0]+", "+mots[1]+"et "+mots[2])  ;
+
+			   }
+		}
+		
+		
+		//System.out.println("Il y a "+nb_noeudsTest+" noeuds d'evac et le tab noeudsTest a une taille de "+noeudsTest.size())  ;
+		int borne_sup = 0 ;	//Valeur par déf
+		
+		//On test chaque noeud et on calcul son tps d'evacuation, indépendament des autres noeuds d'evacuations et noeuds intermediaires
+		for (int n=0; n<nb_noeudsTest; n++) {
+			
+			//System.out.println("Recherches de chemins pour le Noeud n°"+codearraylist(n,0))  ;
+			
+			//Chercher tt les chemins qui commencent par le noeud à évacuer que l'on traite
+			for (int c=0; c<donnee.get_nb_chemins(); c++) {			
+
+				//System.out.println("Comparaison entre le noeud "+codearraylist(n,0)+" d'indice "+noeudsTest.indexOf(codearraylist(n,0))+" avec "+tab_chemins[c][0])  ;
+				if (codearraylist(n,0) == tab_chemins[c][0]) {	//Ce chemin est valide
+					//On calcul la durée de ce chemin (Somme durée des arcs)
+			    	int long_chemin = tab_chemins[c][3] ;		//Recup la taille de ce chemin
+					int temps_cumul= donnee.get_timeArc(tab_chemins[c][0],tab_chemins[c][4],tab_arcsChecker) ;
+				
+					for (int a=0; a<(long_chemin-1); a++) {		
+			    		//System.out.print("noeud "+n+": Debug calcul cumul: Get capa sur "+tab_chemins[c][a+4]+" et "+tab_chemins[c][a+5]); //ça print le chemin 
+						temps_cumul = temps_cumul + donnee.get_timeArc(tab_chemins[c][a+4], tab_chemins[c][a+5],tab_arcsChecker) ;
+						
+					}
+					//On met à jour la borne_sup
+					borne_sup = borne_sup + temps_cumul ;
+					
+					//Affiche la ligne du chemin OK
+					System.out.println("[Borne_sup] Noeud n°"+codearraylist(n,0)+" commence par le chemin ligne "+c+" (1er elm: "+tab_chemins[c][0]+") arrive en borne inf en: "+temps_cumul+" sec.") ;
+				}
+			}
+			
+			
+		}
+		System.out.println("[Borne_sup] La borne inférieur est: "+borne_sup);
+		
+		
+
+		
+		return borne_sup ;
+	}
+	
+	
 	public static void main(String[] args) throws IOException {
 		Checkzer chaz = new Checkzer();
-		System.out.println(chaz.check_solution(493,"dense_10_30_3_8"));
-		
+		//System.out.println(chaz.check_solution(493,"dense_10_30_3_8"));
+		//chaz.borne_inf(493,"dense_10_30_3_8") ; //==42
+		chaz.borne_sup(493,"dense_10_30_3_8") ;
 		
 	}
 	
