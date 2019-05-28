@@ -13,7 +13,7 @@ public class Checkzer {
 	
 	}
 	
-	public  int check_solution(int node_id,String fichiertest) throws IOException {
+	public  int check_solution(String fichiertest) throws IOException {
 
 		int i=1;	//Si solution non valide, elle devient -1
 		int nb_noeudsTest=0 ;
@@ -34,7 +34,7 @@ public class Checkzer {
 		
 		//Ouverture et lecture du fichier contenant les données
 		Donnees donnee = new Donnees(file);
-		int[][] tab_chemins = donnee.getTab_chemins();
+		//int[][] tab_chemins = donnee.getTab_chemins(); 
 		int[][] tab_arcsChecker = donnee.getTab_arcs();
 
 
@@ -53,14 +53,18 @@ public class Checkzer {
 			    	noeudsTest.add(Integer.parseInt(mots[0]));	//Progression, noeud courant
 			    	noeudsTest.add(Integer.parseInt(mots[1]));	//Taux d'évacation
 			    	noeudsTest.add(Integer.parseInt(mots[2]));	//Heure de début
+			    	noeudsTest.add(0); /*Variable gérant le temps de traversée : Initialement à 0
+			    	elle s'incrémente en même temps que l'horloge et se remet à 0 une fois
+			    	qu'elle est égale au temps de traversée*/
+			    	
+			    	
 			   }
 		}
 				
 		//Vérification
 		
 		/*fin : tous les noeuds sont arrivés au noeud safe ou erreur trouvée
-		 * ATTENTION IL FAUT GERER LE TEMPS DE TRAVERSEE !!!!! ET LE DEPART QUI N'EST PAS A 0
-		 * pour l'instant on oublie les duetime des arcs (l'arc devient inutilisable)
+		 * 
 		 */
 		boolean continuer = true;
 		int noeud_safe = donnee.get_finalNode();
@@ -75,28 +79,46 @@ public class Checkzer {
 				int capa_arc = donnee.get_capaArc(noeud_courant,noeud_next,tab_arcsChecker) ;	//La capa max de l'arc
 				int taux_noeudInit = codearraylist(index_a,2) ; //taux d'evacuation associé au noeud
 				int date_debut =codearraylist(index_a,3);
-				//Comparaison entre le taux du noeud initial et celui de l'arc
-				if(date_debut<h) {
-					if (taux_noeudInit <= capa_arc) {	//Le transport pt avoir lieu
-						int difference = capa_arc - taux_noeudInit ; //Ce que l'on doit soustraire
-						donnee.set_capaArc(noeud_courant, noeud_next, tab_arcsChecker, difference) ; //Maj du poids de l'arc qui devient occupé mnt
-						
-						//Test si on doit libérer un arc déja occupé auparavant
-						if (codearraylist(index_a,0) != codearraylist(index_a,1)) {		//Donc si le noeud n'est plus dans son état initial (comme ds le fichier test)
-							int noeud_prec = donnee.prec_node(noeud_init, noeud_courant) ;
-							int capa_arcprecedent = donnee.get_capaArc(noeud_prec,noeud_next,tab_arcsChecker) ;
-							donnee.set_capaArc(noeud_prec, noeud_courant, tab_arcsChecker, capa_arcprecedent+taux_noeudInit) ; //On rend à l'arc précédent le taux qui a été utilisé
+				int temps_traversee = donnee.get_timeArc(noeud_courant, noeud_next, tab_arcsChecker); 
+				int traversee_actuelle = codearraylist(index_a,4);//Variable gérant le temps de traversée
+				
+				if(date_debut<=h) {
+				
+					if(traversee_actuelle==0) {//commencer la traversée
+					
+						if (taux_noeudInit <= capa_arc) {	//Le transport pt avoir lieu
+							int difference = capa_arc - taux_noeudInit ; //Ce que l'on doit soustraire
+							donnee.set_capaArc(noeud_courant, noeud_next, tab_arcsChecker, difference) ; //Maj du poids de l'arc qui devient occupé mnt
+							
+							//Test si on doit libérer un arc déja occupé auparavant
+							
+							 //Maj du noeud courant de ce chemin suivi, il avance après av occupé le noeud suivant
+							
+							noeudsTest.set(codearraylist(index_a,4)+1,0); //On incrémente la traversée actuelle
+				
 						}
-						 //Maj du noeud courant de ce chemin suivi, il avance après av occupé le noeud suivant
-						noeudsTest.set(index_a*4+1, noeud_next) ; 
-			
+						else {
+							i=-1;
+							break; //Sort du for pour economiser du temps (j'espere) 
+						}
+					}
+					if(traversee_actuelle==temps_traversee) {			
+						noeudsTest.set(codearraylist(index_a,1), noeud_next) ; 
+
+						donnee.set_capaArc(noeud_courant, noeud_next, tab_arcsChecker, capa_arc+taux_noeudInit) ; //On rend à l'arc précédent le taux qui a été utilisé
+						
+						noeudsTest.set(codearraylist(index_a,4),0); //On remet la variable de traversee à 0
+						
 					}
 					else {
-						i=-1;
-						break; //Sort du for pour economiser du temps(j'espere) 
+						noeudsTest.set(codearraylist(index_a,4)+1,0); //On incrémente la traversée actuelle
 					}
 				}
+				
 			}
+				
+				//Comparaison entre le taux du noeud initial et celui de l'arc
+				
 			for(int j=0;j<nb_noeudsTest;j++) {//pour tous les noeuds à tester
 				if(codearraylist(j,1)==noeud_safe) {
 					cpt+=1;
@@ -105,11 +127,10 @@ public class Checkzer {
 			if (cpt == nb_noeudsTest) {
 				continuer=false;
 			}
+			h++;
+		
 		}
-			// [TO BE DONE] 
-				// Prendre en compte le tps de début des noeudsS + tps propag arcs
 			
-
 		return i;
 
 	}
@@ -123,17 +144,15 @@ public class Checkzer {
 	}
 	
 	
-	/*DANS LA LISTE NOEUDTEST : SI ON VEUT UTILISER LE NOEUD I, IL FAUT ECRIRE
-	 * noeudsTest(i*4)
-	 * 
-	 * SI ON VEUT LE TAUX D'EVACUATION noeudsTest(i*4+2)
-	 * SI ON VEUT LE TEMPS DE DEPART : noeudsTest(i*4+3)
-	 * ON CREE UNE FONCTION PRENANT 2 PARAMETRES : i : LE NUMERO DU NOEUD
-	 * ET j : VALANT 0,1, 2 OU 3 pour savoir si on veut le noeud initial, le noeud courant, le taux d'evacuation
-	 * ou la date de debut d'evacuation  
-	 */
+	/*CodeArrayList -> code :
+	 * 0 -> noeud initial (figé)
+	 * 1 -> noeud courant
+	 * 2 -> taux d'evacuation
+	 * 3 -> heure de début
+	 * 4 -> Variable gerant le temps de traversee
+	 * */
 	public int codearraylist(int index,int code) {
-		return noeudsTest.get(index*4+code);
+		return noeudsTest.get(index*5+code);
 	}
 	
 /***********			TP n°2 			****************/
@@ -280,6 +299,7 @@ public class Checkzer {
 			    	noeudsTest.add(Integer.parseInt(mots[0]));	//Progression, noeud courant
 			    	noeudsTest.add(Integer.parseInt(mots[1]));	//Taux d'evacuation
 			    	noeudsTest.add(Integer.parseInt(mots[2]));	//Heure de début
+			    	noeudsTest.add(0);//Variable gerant le temps de traversee
 					//System.out.println("Remplissage de NoeudsTest: "+mots[0]+", "+mots[0]+", "+mots[1]+"et "+mots[2])  ;
 
 			   }
@@ -318,7 +338,7 @@ public class Checkzer {
 			
 			
 		}
-		System.out.println("[Borne_sup] La borne inférieur est: "+borne_sup);
+		System.out.println("[Borne_sup] La borne sup est: "+borne_sup);
 		
 		
 
@@ -329,7 +349,7 @@ public class Checkzer {
 	
 	public static void main(String[] args) throws IOException {
 		Checkzer chaz = new Checkzer();
-		//System.out.println(chaz.check_solution(493,"dense_10_30_3_8"));
+		//System.out.println(chaz.check_solution("dense_10_30_3_8"));
 		//chaz.borne_inf(493,"dense_10_30_3_8") ; //==42
 		chaz.borne_sup(493,"dense_10_30_3_8") ;
 		
