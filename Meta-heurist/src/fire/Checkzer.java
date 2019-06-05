@@ -348,10 +348,10 @@ public class Checkzer {
 	
 	
 	public static void main(String[] args) throws IOException {
-		Checkzer chaz = new Checkzer();
+		//Checkzer chaz = new Checkzer();
 		//System.out.println(chaz.check_solution("dense_10_30_3_8"));
 		//chaz.borne_inf(493,"dense_10_30_3_8") ; //==42
-		chaz.borne_sup(493,"dense_10_30_3_8") ;
+		//chaz.borne_sup(493,"dense_10_30_3_8") ;
 		
 	}
 	
