@@ -41,7 +41,7 @@ public class Data {
 			String line;
 			int cpt_arcs = 0 ;
 			int type=0 ; 	//type=0 par déf,=1 qd il faut relever des chemins, =2 pour la ligne ac le nb d'arcs, =3 pour relever des arcs
-			while ((line = br.readLine()) != null && compteur_ligne<derniere_ligne) {
+			while ((line = br.readLine()) != null && compteur_ligne<=derniere_ligne) {
 				compteur_ligne++;
 				String[] mots = line.split(" ");	//La ligne courante
 	
@@ -106,6 +106,7 @@ public class Data {
 				
 				// Arcs
 				else if (type==3) {
+					//System.out.println("Ajout de l'arc: "+mots[0]+" et "+mots[1]);
 					ArrayList<Integer> a1 = new ArrayList <>() ;
 					a1.add(Integer.parseInt(mots[0])) ;		//Noeud1
 					a1.add(Integer.parseInt(mots[1])) ;		//Noeud2
@@ -161,11 +162,10 @@ public class Data {
 		//int nb_nodes = tabChemins.get(num_chemin).get(3) ;	//Le nb de noeuds sur ce chemin
 		
 		//System.out.println("[Get_CapaArc] Recherche de l'arc (" + node1 + ", " + node2 + ")") ;
-
-		
+	
 		// On recherche un arc (node1, node2)
 		int index_i = 0;
-		while (((tabArcs.get(index_i).get(0) != node1) || (tabArcs.get(index_i).get(1)!= node2)) && index_i < nb_noeuds-1 ) {
+		while (((tabArcs.get(index_i).get(0) != node1) || (tabArcs.get(index_i).get(1)!= node2)) && index_i < nb_arcs) {
 			//System.out.println("[Get_CapaArc] Comparaison entre: " + node1 + " / " +tabArcs.get(index_i).get(0)+" et "+ node2 + " / "+tabArcs.get(index_i).get(1));
 			index_i++;
 		}
@@ -173,10 +173,10 @@ public class Data {
 
 
 		// Si c'est l'index qui sort du While, c'est qu'il n'a pas trouvé d'arc
-		if (index_i == nb_noeuds-1) { 
+		if (index_i == nb_arcs) { 
 			//System.out.println("[Get_CapaArc] L'arc (" + node1 + ", " + node2 + ") n'existe pas ");
 			index_i = 0; // On cherche l'arc (node2, node1) mnt, car les arcs ne st pas orientés
-			while (((tabArcs.get(index_i).get(0) != node2) || (tabArcs.get(index_i).get(1) != node1)) && index_i < nb_chemins) {
+			while (((tabArcs.get(index_i).get(0) != node2) || (tabArcs.get(index_i).get(1) != node1)) && index_i < nb_arcs) {
 				index_i++;
 			}
 			retour = tabArcs.get(index_i).get(4) ;	//On récupère la capa
@@ -192,6 +192,48 @@ public class Data {
 						//C'est pour cela que nous ne testons si =/= mais il y a tjs un print Error au cas où
 }
 	
+	
+	// Chercher l'index dans le tab_arcs tel que les 2 noeuds correspondent +
+		// Retourne le temps de traversée
+	public int get_tempsArc(int node1, int node2, int num_chemin) {
+
+			int retour = -1 ;
+			//int nb_nodes = tabChemins.get(num_chemin).get(3) ;	//Le nb de noeuds sur ce chemin
+			
+			//System.out.println("[Get_TempsArc] Recherche de l'arc (" + node1 + ", " + node2 + ")") ;
+		
+			// On recherche un arc (node1, node2)
+			int index_i = 0;
+			while (((tabArcs.get(index_i).get(0) != node1) || (tabArcs.get(index_i).get(1)!= node2)) && index_i < nb_arcs) {
+				//System.out.println("[Get_TempsArc] Comparaison entre: " + node1 + " / " +tabArcs.get(index_i).get(0)+" et "+ node2 + " / "+tabArcs.get(index_i).get(1));
+				index_i++;
+			}
+			retour = tabArcs.get(index_i).get(3) ;	//On récupère le temps
+			//System.out.println("[Get_tempsArc] Retour prend la val: "+retour+" après le 1er parcours et l'index s'est arreté à "+index_i);
+
+
+			// Si c'est l'index qui sort du While, c'est qu'il n'a pas trouvé d'arc
+			if (index_i == nb_arcs) { 
+				//System.out.println("[Get_TempsArc] L'arc (" + node1 + ", " + node2 + ") n'existe pas ");
+				index_i = 0; // On cherche l'arc (node2, node1) mnt, car les arcs ne st pas orientés
+				while (((tabArcs.get(index_i).get(0) != node2) || (tabArcs.get(index_i).get(1) != node1)) && index_i < nb_arcs) {
+					index_i++;
+				}
+				retour = tabArcs.get(index_i).get(3) ;	//On récupère le temps
+				
+				if (index_i == nb_arcs) { // S'il parcourt tt sans rien trouver c'est que l'arc n'existe pas
+					System.out.println("[Get_TempsArc] [ERROR !!] L'arc (" + node1 + ", " + node2
+							+ ") n'existe pas qlque soit le sens ");
+				}
+				//System.out.println("[Get_tempsArc] Retour prend la val: "+retour+" après le 2e parcours");
+
+			}
+			
+			//System.out.println("[Get_tempsArc] Résultat: "+retour);
+			return retour; 	//-1 si l'arc n'existe pas. Ce cas ne devrait jamais arriver car les 2 noeuds sont succéssifs selon le chemin
+							//C'est pour cela que nous ne testons si =/= mais il y a tjs un print Error au cas où
+	}
+		
 	
 	//Calcul le taux min d'un chemin donné en ft de son index dans le tab d'arcs
 	public int tauxMax_chemin(int num_chemin) {
@@ -229,15 +271,31 @@ public class Data {
 	public int get_tauxChemin(int chemin) {
 		return tabChemins.get(chemin).get(2) ;
 	}
+	
+	//Getteurs sur les noeuds d'un chemin
 	public int get_nbNodesChemin(int chemin) {
-		return tabChemins.get(chemin).get(3) ;
+		return tabChemins.get(chemin).get(3)+1;
+	}
+	
+	public int get_idNode (int chemin, int index_noeud) {	//Retourne l'id d'un node en ft de son index dans le tab
+		return tabChemins.get(chemin).get(index_noeud) ;
 	}
 	
 	
-	public static void main(String[] args) throws IOException {	
+	public int get_nextNode(int chemin, int index_noeud) {	//Dans un chemin donné, renvoie l'id du noeud d'un noeud à un à index donné
+		return tabChemins.get(chemin).get(index_noeud+1) ;
+	}
+	public int get_precNode(int chemin, int index_noeud) {	//Dans un chemin donné, renvoie l'id du noeud d'un noeud à un à index donné
+		return tabChemins.get(chemin).get(index_noeud-1) ;
+	}
+	
+	
+	public static void main(String[] args) throws Exception {	
 		Data fichier1 = new Data("donnees") ;
 		Bornes bornes = new Bornes (fichier1) ;
-		bornes.borne_sup() ;
+		//bornes.borne_sup() ;
+		//bornes.borne_inf() ;
+		Checker checker = new Checker("solution", fichier1) ;
 		
 	}
 	
