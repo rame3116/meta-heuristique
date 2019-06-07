@@ -89,7 +89,7 @@ public class Checker {
 	public int simulation() {
 
 		//Boucle sur ts les noeuds d'evac à traiter
-		for (int index_evac=0; index_evac<nb_check;index_evac++) {
+		for (int index_evac=0; index_evac<nb_check-1;index_evac++) {
 			//On lance la simulation
 			//int temps_debut = events.dernier_temps ;
 			int temps_evac= bornes.evacuation_chemin(index_evac, get_tempsDebut(index_evac)) ;

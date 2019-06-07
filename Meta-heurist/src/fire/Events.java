@@ -129,35 +129,107 @@ public class Events {
 			//On vérifie si ce noeud n'a pas d'evenements
 			if(tabEvents.get(index_noeud).size()==1) {	//et pas ==0 à cause de l'entete qui utilise une case de la liste d'events
 				tabEvents.get(index_noeud).add(event) ;
+				inc_nbEventIndex(index_noeud) ;
+
 			}
 			//Il y a au moins 1 autre événement, et on vt les classer: les + récents (temps +grand) à droite
 			else {
 				//On parcourt les autres events pour placer celui-là
 				int c ; //Index
 				int stop=0 ;	//Pr arreter la boucle for car il ne vt pas 2 breaks
-				for (c=1; (c<get_nbEventIndex(index_noeud) && stop==0); c++) {
+				for (c=1; (c<get_nbEventIndex(index_noeud)+1 && stop==0); c++) {
+					
 					//Si cet evnt est plus ancien que celui que l'on traite
-					if (event.get(0) < get_tempsEvent(index_noeud,c)){
+					if (event.get(0) <= get_tempsEvent(index_noeud,c)){
 						tabEvents.get(index_noeud).add(c,event) ;
+						inc_nbEventIndex(index_noeud) ;
+				
+						//S'il y a déja un evenement au meme temps, on somme alors les taux à l'aide de la méthode fusionn
+						if (get_tempsEvent(index_noeud,c)  == get_tempsEvent(index_noeud,c+1)){
+							System.out.println("[Insert_event] Meme event: Pr le noeud "+get_noeudIndex(index_noeud)+" il y a un event de mm temps: "+event.get(0)+" avec un taux "+event.get(1));
+							int nv_taux = event.get(1)+get_tauxEvent(index_noeud,c) ;
+							System.out.println("[Insert_event] Meme event: Le taux du nv event est de "+event.get(1)+" et celui de l'ancien: "+get_tauxEvent(index_noeud,c)+" et leur somme "+nv_taux) ;
+							//tabEvents.get(index_noeud).get(c).set(1, nv_taux) ;
+							
+							//Créer un nv event
+							ArrayList <Integer> nv_event = new ArrayList ();
+							nv_event.add(get_tempsEvent(index_noeud,c)) ;	//Le meme tps que av
+							nv_event.add(nv_taux) ;							//Nv taux
+
+							
+							//On supp l'ancien
+							//tabEvents.get(index_noeud).remove(c+1) ;
+							//tabEvents.get(index_noeud).remove(c+1) ;
+
+							//On l'ajoute à l'index donné
+
+							//tabEvents.get(index_noeud).add(c, nv_event);
+
+							tabEvents.set(index_noeud,tabEvents.get(index_noeud)) ;
+
+							inc_nbEventIndex(index_noeud) ;	
+							
+							
+							stop=1 ; 			
+							//fusion_events(index_noeud,c) ;
+						} 			
 						stop=1 ;
 					}
-					//S'il y a déja un evenement au meme temps, on somme alors les taux
-					/*if (get_tempsEvent(index_noeud,c) == event.get(0) ){
-						//System.out.println("Pr le noeud "+get_noeudIndex(index_noeud)+" il y a un event de mm temps: "+event.get(0));
-						int nv_taux = event.get(1)+get_tauxEvent(index_noeud,c) ;
-						tabEvents.get(index_noeud).get(c).set(1, nv_taux) ;
-						stop=1 ;						
-					}*/
+					
 				}
 				//Pr savoir si on l'a intégré ou pas, si il est plus grand que ts, alr on l'add à la fin
 				if (stop==0){
 					tabEvents.get(index_noeud).add(event) ;
+					inc_nbEventIndex(index_noeud) ;
 					System.out.println("Noeud "+get_noeudIndex(index_noeud)+" est ajouté à la fin car son temps "+event.get(0)+" est sup à "+get_tempsEvent(index_noeud,c-1));
 				}
 			}
-			inc_nbEventIndex(index_noeud) ;
     		//System.out.println("[AddEvent] Ajout de l'evenement ("+nouveau_temps+","+taux_prec+") à correspondant au num "+p+" des noeuds_prec") ;
 		
+		}
+		
+		public void fusion_events(int index_noeud, int index_event) {
+			
+			int temps = get_tempsEvent(index_noeud,index_event) ;
+			int taux1 = get_tauxEvent(index_noeud,index_event) ;
+			int taux2 = get_tauxEvent(index_noeud,index_event+1) ;
+			int nv_taux = taux1 + taux2 ;
+			System.out.println("[fusion_events]Noeud "+get_noeudIndex(index_noeud)+": 1er event_taux: "+taux1+" et 2e "+taux2+" au temps "+temps+", leur somme sera "+nv_taux);
+			System.out.println("[fusion_events]Noeud "+get_noeudIndex(index_noeud)+": le 1er est à l'index="+index_event);
+			//On crée un nv event (temps,nv_taux)
+			ArrayList<Integer> nv_event = new ArrayList<Integer>();
+			nv_event.add(temps) ;
+			nv_event.add(nv_taux) ;
+			
+			//for (int t=0;t<1000000000;t++) {}
+			
+			
+			tabEvents.get(index_noeud).remove(index_event+1) ;
+			
+			
+			//int zbi = index_noeud;
+			//tabEvents.get(index_noeud).remove(zbi) ;
+			//dec_nbEventIndex(index_noeud) ;
+
+			//dec_nbEventIndex(index_noeud) ;
+			
+			tabEvents.get(index_noeud).add(index_event+1, nv_event);
+
+			tabEvents.get(index_noeud).remove(index_event) ;
+
+			//dec_nbEventIndex(index_noeud) ;		
+
+			//tabEvents.get(index_noeud).remove(event+1) ;
+			//dec_nbEventIndex(index_noeud) ;
+
+			
+			//On l'ajoute à l'index du 1er des 2 anciens
+			//inc_nbEventIndex(index_noeud) ;
+
+			
+			//tabEvents.get(index_noeud).get(event).set(1, nv_taux) ;
+			//tabEvents.get(index_noeud).remove(event+1) ;
+			
 		}
 		
 		
@@ -172,8 +244,8 @@ public class Events {
 				System.out.println("Ligne du tabEvents n°"+i+" correspondant au noeud "+noeud+" ayant "+nb_event+" events") ;
 				
 				//Boucle for sur le nb d'evnt:
-				for (int e=0; e<nb_event; e++) {
-					System.out.println("Evenement n°"+(e+1)+": Temps sortie du 1er paquet: "+get_tempsEvent(i,e)+" et taux: "+get_tauxEvent(i,e)) ;
+				for (int e=1; e<nb_event+1; e++) {
+					System.out.println("Evenement n°"+e+": Temps sortie du 1er paquet: "+get_tempsEvent(i,e)+" et taux: "+get_tauxEvent(i,e)) ;
 					//e+1 car le 1er event est en réalité une entete avec (id noeud, nb events)
 				}
 
@@ -228,6 +300,10 @@ public class Events {
 			int nv_nb = get_nbEventIndex(index_tab) + 1;
 			tabEvents.get(index_tab).get(0).set(1,nv_nb) ;
 		}
+		public void dec_nbEventIndex(int index_tab) {		//On décrémente le nb d'events
+			int nv_nb = get_nbEventIndex(index_tab) - 1;
+			tabEvents.get(index_tab).get(0).set(1,nv_nb) ;
+		}
 		
 			//Get résultat (Temps total d'evac du chemin
 		public int get_tempsEvac() {
@@ -244,12 +320,8 @@ public class Events {
 			return resultat ;	
 					
 		}
+		
 		//Trier les evenements d'un noeud donné pour construire une sorte de graphique de taux pour voir si la capa a été dépassé
-		public void tri_events() {
-			for (int n=0; n<taille_tab;n++) {
-				//tabEvents.get(n).sort(c);
-				//Arrays.sort(tabEvents.get(n),Collections.reverseOrder());
-			}
-		}
+		
 
 }
