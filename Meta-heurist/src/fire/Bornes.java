@@ -15,8 +15,6 @@ public class Bornes {
 		file = file1 ;
 		tabChemins = file.get_tabChemins() ;
 		tabArcs = file.get_tabArcs() ;
-		//Events events  = new Events() ; 
-
 	}
 	
 	
@@ -25,11 +23,10 @@ public class Bornes {
 			int chemin_nbNoeuds = file.get_nbNodesChemin(chemin) ;
 			int taux_max = file.tauxMax_chemin(chemin) ;	//Taux max pour ce noeud d'evacuation
 			
-						//	Gestion du 1er arc	//
-			//_____________________________________________________________________________//
+						/*			Gestion du 1er arc			*/
 			
 			//Gérer la population sortant du noeud d'évac
-			System.out.println("[TEST : temps_horloge avant execution du chemin "+chemin+": "+temps_horloge);
+			//System.out.println("[TEST : temps_horloge avant execution du chemin "+chemin+": "+temps_horloge);
 			int population = file.get_popChemin(chemin);	//Population à évacuer de ce noeud
 			
 			//L'arc que l'on traite
@@ -39,7 +36,7 @@ public class Bornes {
 			//Nb de passage et le temps auquel ils vont ts arriver
 			int nb_passageArc = population/taux_max ;
 			int temps_dernier = temps_horloge + nb_passageArc ;		//Tps dernier envoi du noeud d'evac
-			int capa_arc = file.get_capaArc(noeud_courant, noeud_suivant, chemin) ;	//Non utile (car déja tauxMax est censé etre < ou = à chaque capa, mais pt etre utile pr le debug)
+			int capa_arc = file.get_capaArc(noeud_courant, noeud_suivant) ;	//Non utile (car déja tauxMax est censé etre < ou = à chaque capa, mais pt etre utile pr le debug)
 			
 			//Print de l'evacuation de ce chemin
 			//System.out.println("[Evacution chemin] "+chemin+" ("+population+") Depuis le node "+noeud_courant+" à "+noeud_suivant+" de capa "+capa_arc+" avec un débit de "+taux_max+", le 1er paquet va sortir à "+temps_premier+" et le dernier en "+temps_dernier);
@@ -51,10 +48,7 @@ public class Bornes {
 			//events.print_tabEvents() ;
 
 			
-						// Boucle sur les autres noeuds		//
-			//_____________________________________________________________________________//
-
-			
+						/*				 Boucle sur les autres noeuds				*/
 			for (int n=2; n<chemin_nbNoeuds+1; n++) {	//On commence à 2 car le 1er noeud a déjà été traité
 				
 				//System.out.println("Appel de add event du noeud num "+n);
@@ -66,10 +60,7 @@ public class Bornes {
 					
 				//System.out.println("Futur appel de Add Event sur le noeud: "+noeud_actuel+" de noeud_prec "+noeud_prec+" avec un arc de tps de traversée de "+temps_traverse );
 				events.create_event(noeud_actuel, noeud_prec,temps_traverse, taux_max);
-				events.print_tabEvents() ;
 				
-				//Recup le temps d'arrivée
-
 			}
 		int resultat = events.get_tempsEvac() ;
 		return resultat ;
@@ -77,7 +68,7 @@ public class Bornes {
 	
 	//On fait démarrer les noeuds d'evac à la suite dès que chacun est complétement vidé
 	public int borne_sup() {
-		
+				
 		//Events events  = new Events(file,noeud_courant, temps_premier,temps_dernier, taux_max) ; //On lance la simulation
 		int borne_sup = 0 ;
 		//Pour chaque chemin d'evacuation: on cherche à calculer son tps d'évacuation
@@ -89,6 +80,7 @@ public class Bornes {
 
 		}
 		System.out.println("La borne sup est de "+borne_sup);
+		events = new Events () ;	//Reinit pour un prochain appel
 		return borne_sup ;
 	}
 	
@@ -106,7 +98,10 @@ public class Bornes {
 			}
 		}
 		System.out.println("La borne inf est de "+borne_inf);
+		events = new Events () ;	//Reinit pour un prochain appel
+
 		return borne_inf ;
 	}
 	
+
 }

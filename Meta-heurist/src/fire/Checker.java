@@ -15,6 +15,7 @@ public class Checker {
 	private int compteur_ligne = 0;
 	private int derniere_ligne = 9999 ;
 	private int temps_evac ;
+	private Data data ;
 
 	private int nb_check; // Nb de noeuds d'evac à vérifier
 
@@ -22,21 +23,24 @@ public class Checker {
 	public ArrayList<ArrayList<Integer>> tabChemins = new ArrayList<ArrayList<Integer>>();
 	public ArrayList<ArrayList<Integer>> tabArcs = new ArrayList<ArrayList<Integer>>();
 	
-	public Checker(String file1, Data data, Bornes bornes2) throws Exception {
+	public Checker(String file1, Data data2, Bornes bornes2) throws Exception {
 		parser(file1) ;
 		file = file1 ;
 		bornes = bornes2 ;
+		data = data2 ;
 		tabChemins = data.get_tabChemins() ;
 		tabArcs = data.get_tabArcs() ;
 		
 		parser(file) ;
 		if (simulation()!=-1) {	//Le temps est respecté
-			if (test_capa()!=-1) {
-		
+			if (test_capa()==-1) {
+				System.out.println("SOLUTION NON VALIDE");
 			}
-			//events.print_tabEvents();
+			else System.out.println("SOLUTION VALIDE");
+
 		}
-		
+		//events.print_tabEvents();
+
 	}
 	
 	public void parser(String file1) throws Exception, IOException {
@@ -47,7 +51,7 @@ public class Checker {
 		
 		//Lecture dans le fichier
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(file2));
+			BufferedReader br = new BufferedReader(new FileReader(file));
 			String line;
 			
 			while ((line = br.readLine()) != null && compteur_ligne<=derniere_ligne) {
@@ -79,23 +83,18 @@ public class Checker {
 		} catch (FileNotFoundException e) {
 
 		}
-		
-		//Print de vérif:
-		//System.out.println("Nous avons "+nb_check+" et le temps à respecter est de "+temps_evac);
-		//System.out.println("Le dernier noeud Test inséré est "+tabChecker.get(nb_check-1).get(0));
-		
+
 	}
 
 	public int simulation() {
 
 		//Boucle sur ts les noeuds d'evac à traiter
-		for (int index_evac=0; index_evac<nb_check-1;index_evac++) {
+		for (int index_evac=0; index_evac<nb_check;index_evac++) {
 			//On lance la simulation
-			//int temps_debut = events.dernier_temps ;
+			//int temps_debut = events.dernier_temps ;		
 			int temps_evac= bornes.evacuation_chemin(index_evac, get_tempsDebut(index_evac)) ;
-			System.out.println("[Simulation Checker] Le chemin "+index_evac+" s'est evacué à "+temps_evac+" en commencant à "+get_tempsDebut(index_evac));
-			//borne_sup = borne_sup + temps_evac ;
-			//events.print_tabEvents();
+			//System.out.println("[Simulation Checker] Le chemin "+index_evac+" s'est evacué à "+temps_evac+" en commencant à "+get_tempsDebut(index_evac));
+
 
 		}
 		events = bornes.events ;
@@ -111,13 +110,68 @@ public class Checker {
 
 	public int test_capa () {
 		
-		return 0 ;
+		int error = 0 ; 	//Pr tester la fin 
+		int nb_noeuds=events.get_nbNoeuds() ;
+		
+		//On itére sur tt les noeuds qui ont été parcourus durant la simulation
+		for (int num_noeud=0; (num_noeud<nb_noeuds-1 && error!=-1 ); num_noeud++) {
+			
+			if 	(num_noeud != events.get_indexNoeud(data.get_noeud_safe())) {
+				
+				int id_noeud = events.get_noeudIndex(num_noeud) ;
+				//System.out.println("[[[[[[[TEST_NODE_SUIVANT] Traitement de "+id_noeud);
+				//On determine la capacité de l'arc sortant du noeud qu"on traite 
+				int noeud_suivant = data.get_suivant(id_noeud) ;
+				int capa_arc = data.get_capaArc(id_noeud,noeud_suivant);
+				//System.out.println("[[[[[[[TEST_NODE_SUIVANT] Le noeud suivant de "+id_noeud+" est: "+noeud_suivant+", capa= "+capa_arc);
+				int nb_events= events.get_nbEventIndex(num_noeud) ;
+				//System.out.println("[TestCapa] Events du noeud "+id_noeud+" ayant "+nb_events+" events") ;
+				
+				
+				//On itère sur les evenements qu'ils recoient 
+				for (int num_event=1; num_event<nb_events; num_event ++ ) {
+					
+					int taux_actuel = 0 ;
+
+					
+					//Pour le dernier evnt, on ne check pas si l'event suivant est en meme temps car il n'e
+					if (num_event==nb_events) {
+						taux_actuel = taux_actuel + events.get_tauxEvent(num_noeud, num_event) ;
+
+					}
+					else {
+						//Cet event n'est pas suivi d'un autre qui est en meme temps
+						if (events.get_tempsEvent(num_noeud, num_event) != events.get_tempsEvent(num_noeud, num_event+1)) {
+							taux_actuel = taux_actuel + events.get_tauxEvent(num_noeud, num_event) ;
+						}
+						//2 events en mm temps: on les somme entre eux avant de l'additionner au taux
+						else {
+							int fusion = events.get_tauxEvent(num_noeud, num_event) + events.get_tauxEvent(num_noeud, num_event+1) ;
+							taux_actuel = taux_actuel + fusion ;
+							taux_actuel ++ ;
+							//System.out.println("[TestCapa] Fusion: noeud "+id_noeud+", events de taux: "+events.get_tauxEvent(num_noeud, num_event)+" et "+events.get_tauxEvent(num_noeud, num_event+1)+", taux_actuel: "+taux_actuel);
+						}
+					}
+						
+					//Test si le flux actuel a  dépassé la capa
+					if (taux_actuel > capa_arc) {
+						error=-1 ;			
+						//System.out.println("[TestCapa] La capa du noeud "+id_noeud+" explose: taux de "+taux_actuel+" et capa de "+capa_arc) ;
+					}
+				}
+
+		}
+		}
+			
+			
+			
+		return error ;
 	}
 	
 	//  	Getteurs		//
 
 	//Get date_debut d'un d'evac en ft de son index
 	public int get_tempsDebut(int index) {
-		return tabChecker.get(index).get(1) ;
+		return tabChecker.get(index).get(2) ;
 	}
 }
