@@ -1,6 +1,7 @@
 package fire;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 
 public class Events {
@@ -8,7 +9,7 @@ public class Events {
 		Data data ;		//Contient tout les tableaux de chemins et d'arcs
 	
 		public int taille_tab = 0 ;	//Taille du tab, utile pour le print du tab
-	
+		public int dernier_temps = 0 ;
 		//Tableau contenant tout les noeuds, chaque noeud contient une liste de couple (tps,flot sortant)
 		ArrayList<ArrayList<ArrayList<Integer>>> tabEvents = new ArrayList<ArrayList<ArrayList<Integer>>>(); //Le 1er indice contient le
 		//Exp: 	// 	 (id_node, nb_event)	//		2		//		3		//
@@ -17,34 +18,13 @@ public class Events {
 		//		__________________________________________
 											//	(19,+9)
 		
-		public Events(Data file, int premier_noeud, int temps_debut, int temps_fin, int taux) {
+		public Events() {
 			
+		}
+	
+		public void first_event(Data file, int premier_noeud, int temps_debut, int temps_fin, int taux, int chemin) {
 			
-			Data data = file ;
-			int chemin_nbNoeuds = file.get_nbNodesChemin(0) ;
-			int taux_max = file.tauxMax_chemin(0) ;	//Taux max pour ce noeud d'evacuation
-			/*
-			
-						//	Gestion du 1er arc	//
-			//_____________________________________________________________________________//
-			
-			//Gérer la population sortant du noeud d'évac
-			int temps_premier=0 ;							//On effectue le 1er passage à t=0
-			int population = file.get_popChemin(chemin);	//Population à évacuer de ce noeud
-			
-			//L'arc que l'on traite
-			int noeud_courant = tabChemins.get(chemin).get(4) ;		//Noeud courant
-			int noeud_suivant = tabChemins.get(chemin).get(5) ;		//Noeud courant
-
-			//Nb de passage et le temps auquel ils vont ts arriver
-			int nb_passageArc = population/taux_max ;
-			int temps_dernier = 	temps_premier + nb_passageArc ;		//Tps dernier envoi du noeud d'evac
-			int capa_arc = file.get_capaArc(noeud_courant, noeud_suivant, chemin) ;	//Non utile (car déja tauxMax est censé etre < ou = à chaque capa, mais pt etre utile pr le debug)
-				
-			
-			
-			*/
-			
+			data = file ;
 			//On crée le 1er array (1 dimension) contenant le nom du noeud puis un array (un dimension) pour le 1er noeud
 			
 			//1ère ligne de la 1ère colonne de notre tab contenant le nom du noeud, puis le nb d'evenement
@@ -71,10 +51,9 @@ public class Events {
 			
 			//On ajoute cet array au tab général
 			tabEvents.add(noeud1) ;
-			
+	
 			taille_tab ++ ;
-			tabEvents.get(0).get(0).set(1,2) ;	//1er get0 pour le 1er noeud, 2e get0 pour l'entete, set(1,2): place 2 à l'index 1 (nb_event)
-			//print_tabEvents();
+			tabEvents.get(get_indexNoeud(premier_noeud)).get(0).set(1,2) ;	//1er get0 pour le 1er noeud, 2e get0 pour l'entete, set(1,2): place 2 à l'index 1 (nb_event)
 
 		}
 		
@@ -83,7 +62,8 @@ public class Events {
 			return tabEvents ;
 		}
 
-		public void add_event(int noeud, int noeud_prec, int temps_traverse, int taux) {	//Nous avons juste besoin de connaitre le tps de traversé suite aux events des noeuds prec
+
+		public void create_event(int noeud, int noeud_prec, int temps_traverse, int taux) {	//Nous avons juste besoin de connaitre le tps de traversé suite aux events des noeuds prec
 			
 			//On test d'abord si le node n'a pas de colonne qui lui est propre comme ds l'exmple
 			//On doit itérer sur la 1ère dimension du tab (une colonne par noeud)
@@ -92,7 +72,8 @@ public class Events {
 			for (int i=0; i<taille_tab; i++) {	//Itérateur sur le tab
 		    	  //Ce noeud existe déja ds le tab d'evenement
 		    	  if (noeud == get_noeudIndex(i)) {	
-				       System.out.println("Le noeud "+noeud+" existe déja dans la tab");
+				       //System.out.println("Le noeud "+noeud+" existe déja dans la tab");
+				       existe=1 ;
 				       break ;
 		    	  }
 			}
@@ -111,8 +92,7 @@ public class Events {
 			}
 			
 		int index_noeud = get_indexNoeud(noeud) ;	//L'index du noeud ds le tab, mnt qu'on est sur qu'il existe
-
-			
+		
     	  		//Récupérer les events précédents:
     	  
     	  //Vérif si son noeud prec existe bien au cas où
@@ -129,10 +109,12 @@ public class Events {
 					ArrayList <Integer> event = new ArrayList <Integer> () ;
 					event.add(nouveau_temps) ;
 					event.add(taux_prec) ;
-					tabEvents.get(index_noeud).add(event) ;
-					inc_nbEventIndex(index_noeud) ;
-		    		//System.out.println("[AddEvent] Ajout de l'evenement ("+nouveau_temps+","+taux_prec+") à correspondant au num "+p+" des noeuds_prec") ;
-	    		}	  
+					
+					//On vérifie si cet event existe déja pour savoir si on l'ajoute ou pas
+					if (!tabEvents.get(index_noeud).contains(event)) {
+						insert_event(index_noeud, event) ;
+					}
+				}	  
 
 	      }
     	  else {
@@ -140,9 +122,45 @@ public class Events {
     	  }
 		
 	    }
-			
 		
-	
+		//On l'insère de tel sorte à ce que la liste d'evnt soit bien ordonné en ft de la chronologie
+		public void insert_event(int index_noeud,ArrayList<Integer> event) {
+			
+			//On vérifie si ce noeud n'a pas d'evenements
+			if(tabEvents.get(index_noeud).size()==1) {	//et pas ==0 à cause de l'entete qui utilise une case de la liste d'events
+				tabEvents.get(index_noeud).add(event) ;
+			}
+			//Il y a au moins 1 autre événement, et on vt les classer: les + récents (temps +grand) à droite
+			else {
+				//On parcourt les autres events pour placer celui-là
+				int c ; //Index
+				int stop=0 ;	//Pr arreter la boucle for car il ne vt pas 2 breaks
+				for (c=1; (c<get_nbEventIndex(index_noeud) && stop==0); c++) {
+					//Si cet evnt est plus ancien que celui que l'on traite
+					if (event.get(0) < get_tempsEvent(index_noeud,c)){
+						tabEvents.get(index_noeud).add(c,event) ;
+						stop=1 ;
+					}
+					//S'il y a déja un evenement au meme temps, on somme alors les taux
+					/*if (get_tempsEvent(index_noeud,c) == event.get(0) ){
+						//System.out.println("Pr le noeud "+get_noeudIndex(index_noeud)+" il y a un event de mm temps: "+event.get(0));
+						int nv_taux = event.get(1)+get_tauxEvent(index_noeud,c) ;
+						tabEvents.get(index_noeud).get(c).set(1, nv_taux) ;
+						stop=1 ;						
+					}*/
+				}
+				//Pr savoir si on l'a intégré ou pas, si il est plus grand que ts, alr on l'add à la fin
+				if (stop==0){
+					tabEvents.get(index_noeud).add(event) ;
+					System.out.println("Noeud "+get_noeudIndex(index_noeud)+" est ajouté à la fin car son temps "+event.get(0)+" est sup à "+get_tempsEvent(index_noeud,c-1));
+				}
+			}
+			inc_nbEventIndex(index_noeud) ;
+    		//System.out.println("[AddEvent] Ajout de l'evenement ("+nouveau_temps+","+taux_prec+") à correspondant au num "+p+" des noeuds_prec") ;
+		
+		}
+		
+		
 		public void print_tabEvents() {
 			
 			//Boucle pour chaque colonne du tab
@@ -155,7 +173,7 @@ public class Events {
 				
 				//Boucle for sur le nb d'evnt:
 				for (int e=0; e<nb_event; e++) {
-					System.out.println("Evenement n°"+(e+1)+": Temps sortie du 1er paquet: "+get_tempsEvent(i,e+1)+" et taux: "+get_tauxEvent(i,e+1)) ;
+					System.out.println("Evenement n°"+(e+1)+": Temps sortie du 1er paquet: "+get_tempsEvent(i,e)+" et taux: "+get_tauxEvent(i,e)) ;
 					//e+1 car le 1er event est en réalité une entete avec (id noeud, nb events)
 				}
 
@@ -200,7 +218,6 @@ public class Events {
 		    	  }
 			}
 			return retour ;
-		
 		}
 	
 				//Setteur pour event
@@ -216,13 +233,23 @@ public class Events {
 		public int get_tempsEvac() {
 			
 			//On cherche l'index du dernier event du noeud d'evac qui contient notre temps de fin
+			int noeud_evac = data.get_noeud_safe() ;	//Id node evac
+			int index_noeudEvac = get_indexNoeud(noeud_evac) ;
 			ArrayList<ArrayList<Integer>> events_noeudFin = new ArrayList<ArrayList<Integer>>();
-			events_noeudFin = tabEvents.get(taille_tab-1) ;
+			events_noeudFin = tabEvents.get(index_noeudEvac) ;
 			int index_dernierEvent = events_noeudFin.size() ;
 			//System.out.println("GET TEMPS EVAC: dernier_event: "+index_dernierEvent) ;
-			int resultat = get_tempsEvent(taille_tab-1,index_dernierEvent-1) ;
+			int resultat = get_tempsEvent(index_noeudEvac,index_dernierEvent-1) ;
+			dernier_temps = resultat ;		//On met à jour dernier temps pour pouvoir le récupérer à la fin d'un traitement d'un chemin
 			return resultat ;	
 					
+		}
+		//Trier les evenements d'un noeud donné pour construire une sorte de graphique de taux pour voir si la capa a été dépassé
+		public void tri_events() {
+			for (int n=0; n<taille_tab;n++) {
+				//tabEvents.get(n).sort(c);
+				//Arrays.sort(tabEvents.get(n),Collections.reverseOrder());
+			}
 		}
 
 }

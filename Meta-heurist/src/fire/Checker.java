@@ -9,6 +9,8 @@ import java.util.ArrayList;
 public class Checker {
 
 	private String file;
+	private Bornes bornes ;
+	private Events events ;
 	ArrayList<ArrayList<Integer>> tabChecker = new ArrayList<ArrayList<Integer>>();	
 	private int compteur_ligne = 0;
 	private int derniere_ligne = 9999 ;
@@ -20,85 +22,102 @@ public class Checker {
 	public ArrayList<ArrayList<Integer>> tabChemins = new ArrayList<ArrayList<Integer>>();
 	public ArrayList<ArrayList<Integer>> tabArcs = new ArrayList<ArrayList<Integer>>();
 	
-	public Checker(String file1, Data data) throws Exception {
+	public Checker(String file1, Data data, Bornes bornes2) throws Exception {
 		parser(file1) ;
 		file = file1 ;
+		bornes = bornes2 ;
 		tabChemins = data.get_tabChemins() ;
 		tabArcs = data.get_tabArcs() ;
+		
+		parser(file) ;
+		if (simulation()!=-1) {	//Le temps est respecté
+			if (test_capa()!=-1) {
+		
+			}
+			//events.print_tabEvents();
+		}
 		
 	}
 	
 	public void parser(String file1) throws Exception, IOException {
+		
 		//Récupérer le fichier
-				file =  "./../../meta-heuristique/InstancesInt/"+file1 ;
-				String file2 = "./../../Meta_Heuristique/InstancesInt/" + file1 ;
-				
-				//Lecture dans le fichier
-				try {
-					BufferedReader br = new BufferedReader(new FileReader(file2));
-					String line;
-					
-					while ((line = br.readLine()) != null && compteur_ligne<=derniere_ligne) {
-						compteur_ligne++;
-						String[] mots = line.split(" ");	//La ligne courante
+		file =  "./../../meta-heuristique/InstancesInt/"+file1 ;
+		String file2 = "./../../Meta_Heuristique/InstancesInt/" + file1 ;
+		
+		//Lecture dans le fichier
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(file2));
+			String line;
 			
-						
-						// 1ere ligne info
-						if (compteur_ligne == 2) {
-							//System.out.println("1ere ligne");
-							nb_check = Integer.parseInt(mots[0]);
-						}
-						//On recopie les noeuds d'evac + leurs infos
-						else if (compteur_ligne > 2 && compteur_ligne<nb_check+3) {	//+2 A cause du decalage de 2 (2 1ères lignes de données) et +1 car on commence à l'indice 1
-							
-							//Données relative à ce noeud d'evac à test
-							ArrayList<Integer> c1 = new ArrayList <>() ;	
-							c1.add(Integer.parseInt(mots[0]));	//Noeud initial, figé
-					    	c1.add(Integer.parseInt(mots[1]));	//Taux d'évacation
-					    	c1.add(Integer.parseInt(mots[2]));	//Heure de début
-					    	tabChecker.add(c1) ;				//On l'ajoute au tab du checker 
-						}
-						//Ligne contenant le temps auquel l'evacuation est censée finir
-						else if (compteur_ligne == nb_check+4) {
-							temps_evac = Integer.parseInt(mots[0]);
-						}
-					}
-					br.close();
-				} catch (FileNotFoundException e) {
-
+			while ((line = br.readLine()) != null && compteur_ligne<=derniere_ligne) {
+				compteur_ligne++;
+				String[] mots = line.split(" ");	//La ligne courante
+	
+				
+				// 1ere ligne info
+				if (compteur_ligne == 2) {
+					//System.out.println("1ere ligne");
+					nb_check = Integer.parseInt(mots[0]);
 				}
-				
-				//Print de vérif:
-				System.out.println("Nous avons "+nb_check+" et le temps à respecter est de "+temps_evac);
-				System.out.println("Le dernier noeud Test inséré est "+tabChecker.get(nb_check-1).get(0));
-				
+				//On recopie les noeuds d'evac + leurs infos
+				else if (compteur_ligne > 2 && compteur_ligne<nb_check+3) {	//+2 A cause du decalage de 2 (2 1ères lignes de données) et +1 car on commence à l'indice 1
+					
+					//Données relative à ce noeud d'evac à test
+					ArrayList<Integer> c1 = new ArrayList <>() ;	
+					c1.add(Integer.parseInt(mots[0]));	//Noeud initial, figé
+			    	c1.add(Integer.parseInt(mots[1]));	//Taux d'évacation
+			    	c1.add(Integer.parseInt(mots[2]));	//Heure de début
+			    	tabChecker.add(c1) ;				//On l'ajoute au tab du checker 
+				}
+				//Ligne contenant le temps auquel l'evacuation est censée finir
+				else if (compteur_ligne == nb_check+4) {
+					temps_evac = Integer.parseInt(mots[0]);
+				}
+			}
+			br.close();
+		} catch (FileNotFoundException e) {
+
+		}
+		
+		//Print de vérif:
+		//System.out.println("Nous avons "+nb_check+" et le temps à respecter est de "+temps_evac);
+		//System.out.println("Le dernier noeud Test inséré est "+tabChecker.get(nb_check-1).get(0));
+		
 	}
 
 	public int simulation() {
 
+		//Boucle sur ts les noeuds d'evac à traiter
+		for (int index_evac=0; index_evac<nb_check;index_evac++) {
+			//On lance la simulation
+			//int temps_debut = events.dernier_temps ;
+			int temps_evac= bornes.evacuation_chemin(index_evac, get_tempsDebut(index_evac)) ;
+			System.out.println("[Simulation Checker] Le chemin "+index_evac+" s'est evacué à "+temps_evac+" en commencant à "+get_tempsDebut(index_evac));
+			//borne_sup = borne_sup + temps_evac ;
+			//events.print_tabEvents();
 
-		int chemin_nbNoeuds = file.get_nbNodesChemin(chemin) ;
-		int taux_max = file.tauxMax_chemin(0) ;	//Taux max pour ce noeud d'evacuation
+		}
+		events = bornes.events ;
 		
-					//	Gestion du 1er arc	//
-		//_____________________________________________________________________________//
-		
-		//Gérer la population sortant du noeud d'évac
-		int temps_premier=0 ;							//On effectue le 1er passage à t=0
-		int population = file.get_popChemin(chemin);	//Population à évacuer de ce noeud
-		
-		//L'arc que l'on traite
-		int noeud_courant = tabChemins.get(chemin).get(4) ;		//Noeud courant
-		int noeud_suivant = tabChemins.get(chemin).get(5) ;		//Noeud courant
+		//On calcul le temps auquelle est arrivé le dernier paquet, si ca respecte le temps de la solution alors ok, sinon renvoie -1
+		int temps_simulation = events.get_tempsEvac() ;
+		System.out.println("L'evacuation se fait en "+temps_simulation+" et doit etre inf à "+temps_evac);
+		if (temps_simulation>temps_evac) {	
+			temps_simulation = -1 ;
+		}
+		return temps_simulation ;
+	}
 
-		//Nb de passage et le temps auquel ils vont ts arriver
-		int nb_passageArc = population/taux_max ;
-		int temps_dernier = 	temps_premier + nb_passageArc ;		//Tps dernier envoi du noeud d'evac
-		int capa_arc = file.get_capaArc(noeud_courant, noeud_suivant, chemin) ;	//Non utile (car déja tauxMax est censé etre < ou = à chaque capa, mais pt etre utile pr le debug)
+	public int test_capa () {
 		
-		
-		//On importe le fichier source contenant les tableaux de chemins et d'arc
-		Events events = new Events ();
 		return 0 ;
+	}
+	
+	//  	Getteurs		//
+
+	//Get date_debut d'un d'evac en ft de son index
+	public int get_tempsDebut(int index) {
+		return tabChecker.get(index).get(1) ;
 	}
 }

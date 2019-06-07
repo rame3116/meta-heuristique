@@ -295,7 +295,7 @@ public class Data {
 		Bornes bornes = new Bornes (fichier1) ;
 		//bornes.borne_sup() ;
 		//bornes.borne_inf() ;
-		Checker checker = new Checker("solution", fichier1) ;
+		Checker checker = new Checker("solution", fichier1,bornes) ;
 		
 	}
 	
